@@ -1,4 +1,4 @@
-# Auth0 Guardian Demo
+# Auth0 Guardian Demo - Android
 Sample android app using Auth Guardian SDK to register a/ enrol for push notifications and respond to MFA push.
 
 ## FCM Setup
