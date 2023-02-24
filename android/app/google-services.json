@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "12568717384",
+    "firebase_url": "https://travel0-android.firebaseio.com",
+    "project_id": "travel0-android",
+    "storage_bucket": "travel0-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12568717384:android:51b8b75b2656d0e8b2507d",
+        "android_client_info": {
+          "package_name": "com.auth0.guardian.demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "12568717384-njs0lcuq5kq9gcuvrrap7t7n5i5gvc2u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBW7_vJw8dJREksJilIa_F_o4NA-3QxbVk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "12568717384-njs0lcuq5kq9gcuvrrap7t7n5i5gvc2u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12568717384:android:405fd163b67dde43b2507d",
+        "android_client_info": {
+          "package_name": "com.auth0.weblauncher"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "12568717384-njs0lcuq5kq9gcuvrrap7t7n5i5gvc2u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBW7_vJw8dJREksJilIa_F_o4NA-3QxbVk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "12568717384-njs0lcuq5kq9gcuvrrap7t7n5i5gvc2u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:12568717384:android:ef1d9ae3b8c37e42b2507d",
+        "android_client_info": {
+          "package_name": "net.travel0.android.demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "12568717384-njs0lcuq5kq9gcuvrrap7t7n5i5gvc2u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBW7_vJw8dJREksJilIa_F_o4NA-3QxbVk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "12568717384-njs0lcuq5kq9gcuvrrap7t7n5i5gvc2u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

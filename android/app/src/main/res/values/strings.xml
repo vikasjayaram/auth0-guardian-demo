@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Guardian Push Notifications (MFA)</string>
+    <string name="title_main">Guardian Push Notifications (MFA)</string>
+    <string name="title_enroll">Enroll account</string>
+    <string name="title_notification">Authentication request</string>
+    <string name="progress_title_please_wait">Please wait</string>
+    <string name="progress_message_unenroll">Trying to unenroll your account…</string>
+    <string name="progress_message_reject">Trying to reject the authentication request…</string>
+    <string name="progress_message_allow">Trying to allow the authentication request…</string>
+    <string name="progress_message_enroll">Trying to enroll your account…</string>
+    <string name="alert_title_error">Error</string>
+    <string name="alert_message_fcm_error">Could not obtain FCM token.\nCheck your FCM configuration and internet connection and try again later</string>
+    <string name="guardian_notification_title">Push notification received</string>
+    <string name="guardian_notification_text">Click to see details</string>
+    <string name="com_auth0_client_id">{CLIENT_ID}}</string>
+    <string name="com_auth0_domain">{AUTH)_DOMAIN}</string>
+    <string name="guardian_url">https://{TENANT}.guardian.{REGION}.auth0.com</string>
+    <string name="mfa_audience">https://{AUTH0_DOMAIN}/mfa/</string>
+
+
+    <string name="Auth0_Associate">https://{AUTH0_DOMAIN}/mfa/associate</string>
+    <string name="Associate_Push_Payload">{\"authenticator_types\": [\"oob\"], \"oob_channels\": [\"auth0\"] }</string>
+    <string name="title_activity_view_account">ViewAccount</string>
+</resources>

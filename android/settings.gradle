@@ -1,0 +1,3 @@
+rootProject.name = 'Auth0.Android.Guardian.MFA.Demo'
+
+include ':app'
