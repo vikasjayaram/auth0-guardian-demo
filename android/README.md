@@ -4,7 +4,7 @@ Sample android app using Auth Guardian SDK to register a/ enrol for push notific
 ## FCM Setup
 - Register for a project in (Firebase)[https://console.firebase.google.com/project]
 - Add App of type Android
-- Register `auth0.guardian.demo` as teh package name
+- Register `com.auth0.guardian.demo` as teh package name
 - Download the `google-services.json` file
 - Add it under the `app` directory
 
