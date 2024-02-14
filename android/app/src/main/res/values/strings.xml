@@ -12,22 +12,12 @@
     <string name="alert_message_fcm_error">Could not obtain FCM token.\nCheck your FCM configuration and internet connection and try again later</string>
     <string name="guardian_notification_title">Push notification received</string>
     <string name="guardian_notification_text">Click to see details</string>
-<<<<<<< Updated upstream
-    <string name="com_auth0_client_id">{CLIENT_ID}}</string>
-    <string name="com_auth0_domain">{AUTH0_DOMAIN}</string>
-    <string name="guardian_url">https://{TENANT}.guardian.{REGION}.auth0.com</string>
-    <string name="mfa_audience">https://{AUTH0_DOMAIN}/mfa/</string>
-
-
-    <string name="Auth0_Associate">https://{AUTH0_DOMAIN}/mfa/associate</string>
-=======
     <string name="com_auth0_client_id">4lqpobgAQcHZQAAUJglTHAYlKvfqrNbx</string>
     <string name="com_auth0_domain">vjayaram-playground.au.auth0.com</string>
     <string name="guardian_url">https://auth.oauth101.net/appliance-mfa</string>
     <string name="mfa_audience">https://vjayaram-playground.au.auth0.com/mfa/</string>
     <string name="Auth0_Associate">https://vjayaram-playground.au.auth0.com/mfa/associate</string>
     <string name="Auth0_Challenge">https://vjayaram-playground.au.auth0.com/mfa/challenge</string>
->>>>>>> Stashed changes
     <string name="Associate_Push_Payload">{\"authenticator_types\": [\"oob\"], \"oob_channels\": [\"auth0\"] }</string>
     <string name="title_activity_view_account">ViewAccount</string>
     <string name="ropg">Login</string>
