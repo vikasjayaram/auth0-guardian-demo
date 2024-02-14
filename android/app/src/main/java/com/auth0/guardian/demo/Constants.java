@@ -24,6 +24,11 @@ package com.auth0.guardian.demo;
 
 public class Constants {
 
-    public static final String ENROLLMENT = "com.auth0.guardian.weblauncher.Constants.ENROLLMENT";
-    public static final String NOTIFICATION = "com.auth0.guardian.weblauncher.Constants.NOTIFICATION";
+    public static final String ENROLLMENT = "com.auth0.guardian.demo.Constants.ENROLLMENT";
+    public static final String NOTIFICATION = "com.auth0.guardian.demo.Constants.NOTIFICATION";
+    public static final int NOTIFICATION_ID = 5;
+
+    public static final String REFRESH_TOKEN = "com.auth0.guardian.demo.Constants.REFRESH_TOKEN";
+    public static final String MFA_ACCESS_TOKEN = "com.auth0.guardian.demo.Constants.MFA_ACCESS_TOKEN";
+
 }

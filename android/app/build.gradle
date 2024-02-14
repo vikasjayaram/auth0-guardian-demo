@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 33
     defaultConfig {
         applicationId 'com.auth0.guardian.demo'
-        minSdkVersion 15
-        targetSdkVersion 28
+        minSdkVersion 21
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
-
+        multiDexEnabled = true
         manifestPlaceholders = [auth0Domain: "@string/com_auth0_domain", auth0Scheme: "demo"]
     }
     buildTypes {
@@ -25,12 +25,12 @@ android {
     productFlavors {
     }
 }
-
+def core_version = "1.6.0"
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     //implementation "androidx.browser:browser:1.4.0"
-    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.google.android.material:material:1.0.0'
     //GSON
     implementation 'com.google.code.gson:gson:2.8.5'
     //FCM
@@ -42,10 +42,11 @@ dependencies {
     implementation 'com.google.zxing:core:3.2.1'
     testImplementation 'junit:junit:4.12'
     //Auth0 Login
-    implementation 'com.auth0.android:auth0:1.+'
+    implementation 'com.auth0.android:auth0:2.10.1'
     //HTTP client
     implementation 'com.squareup.okhttp:okhttp:2.7.5'
     //Guardian SDK
     implementation 'com.auth0.android:guardian:0.6.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation "androidx.core:core:$core_version"
 }

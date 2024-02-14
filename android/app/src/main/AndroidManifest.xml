@@ -3,8 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.auth0.guardian.demo">
 
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Firebase Analytics  https://firebase.google.com/docs/reference/kotlin/com/google/firebase/analytics/FirebaseAnalytics#getinstance  -->
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- [START GCM permissions] -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <!-- [END GCM permissions] -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -13,12 +23,9 @@
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
         <activity
-            android:name="com.auth0.guardian.demo.ViewAccountActivity"
-            android:label="@string/title_activity_view_account"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
-        <activity
             android:name="com.auth0.guardian.demo.MainActivity"
-            android:label="@string/title_main">
+            android:label="@string/title_main"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,12 +37,35 @@
             android:label="@string/title_enroll" />
         <activity
             android:name="com.auth0.guardian.demo.NotificationActivity"
-            android:label="@string/title_notification" /> <!-- [START FCM services] -->
-        <service android:name="com.auth0.guardian.demo.fcm.FcmListenerService">
+            android:label="@string/title_notification" />
+
+        <!-- [START FCM services] -->
+        <service
+            android:name="com.auth0.guardian.demo.fcm.FcmListenerService"
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <!-- [START FCM Services] -->
+        <service
+            android:name=".fcm.FcmListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <receiver android:name = ".fcm.FcmRegistrationIntentService" />
+
+<!--        <service-->
+<!--            android:name=".fcm.FcmRegistrationIntentService"-->
+<!--            android:exported="false"-->
+<!--            android:permission="android.permission.BIND_JOB_SERVICE" />-->
+<!--        <service-->
+<!--            android:name=".fcm.FcmUpdateAccountsIntentService"-->
+<!--            android:exported="false"-->
+<!--            android:permission="android.permission.BIND_JOB_SERVICE" />-->
+        <!-- [END FCM Services] -->
     </application>
 
 </manifest>

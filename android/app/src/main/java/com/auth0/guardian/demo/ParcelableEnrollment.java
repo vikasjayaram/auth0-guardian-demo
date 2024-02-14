@@ -24,7 +24,7 @@ package com.auth0.guardian.demo;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Base64;
 
 import com.auth0.android.guardian.sdk.Enrollment;

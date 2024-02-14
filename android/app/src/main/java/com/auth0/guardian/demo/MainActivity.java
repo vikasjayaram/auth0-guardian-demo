@@ -22,59 +22,119 @@
 
 package com.auth0.guardian.demo;
 
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 //import androidx.browser.customtabs.CustomTabsIntent;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.auth0.android.Auth0;
+import com.auth0.android.authentication.AuthenticationAPIClient;
+import com.auth0.android.authentication.AuthenticationException;
+import com.auth0.android.authentication.ParameterBuilder;
+import com.auth0.android.authentication.storage.SecureCredentialsManager;
+import com.auth0.android.authentication.storage.SharedPreferencesStorage;
 import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.GuardianException;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
 import com.auth0.android.guardian.sdk.networking.Callback;
+import com.auth0.android.provider.TokenValidationException;
+import com.auth0.android.provider.WebAuthProvider;
+import com.auth0.android.request.DefaultClient;
+import com.auth0.android.result.Credentials;
 import com.auth0.guardian.demo.events.GuardianNotificationReceivedEvent;
+import com.auth0.guardian.demo.fcm.FcmListenerService;
 import com.auth0.guardian.demo.fcm.FcmUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity implements FcmUtils.FcmTokenListener {
 
     private static final String TAG = MainActivity.class.getName();
 
     private static final int ENROLL_REQUEST = 123;
+    private static final int ENROLL_WITH_RT_REQUEST = 124;
 
     private View loadingView;
     private View enrollView;
     private View accountView;
     private TextView deviceNameText;
     private TextView fcmTokenText;
-    private TextView userText;
-
+    private TextView userText, totp;
+    private EditText username, password;
     private EventBus eventBus;
     private Guardian guardian;
     private ParcelableEnrollment enrollment;
     private String fcmToken;
+    private String refreshToken;
     private boolean silentAccept = false;
-
+    private Auth0 auth0;
+    private SecureCredentialsManager credentialsManager;
+    private AuthenticationAPIClient apiClient;
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Toast.makeText(this, "Notifications permission granted",Toast.LENGTH_SHORT)
+                            .show();
+                } else {
+                    Toast.makeText(this, "FCM can't post notifications without POST_NOTIFICATIONS permission",
+                            Toast.LENGTH_LONG).show();
+                }
+            });
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // Auth0
+        auth0 = new Auth0(this);
+        DefaultClient netClient = new DefaultClient(10, 15, Collections.emptyMap(), true);
 
+        auth0.setNetworkingClient(netClient);
+        apiClient = new AuthenticationAPIClient(auth0);
+
+
+        SharedPreferencesStorage storage = new SharedPreferencesStorage(this);
+        credentialsManager = new SecureCredentialsManager(this,apiClient, storage);
+        /*
+         * Create Notification Channel
+         */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Create channel to show notifications.
+            String channelId  = getString(R.string.push_notification_channel_id);
+            String channelName = getString(R.string.push_notification_channel_name);
+            NotificationManager notificationManager =
+                    getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(new NotificationChannel(channelId,
+                    channelName, NotificationManager.IMPORTANCE_HIGH));
+        }
         setupUI();
-
         eventBus = EventBus.getDefault();
         eventBus.register(this);
         guardian = new Guardian.Builder()
@@ -91,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
          */
         FcmUtils fcmUtils = new FcmUtils();
         fcmUtils.fetchFcmToken(this);
+        //FcmListenerService.createChannelAndHandleNotifications(getApplicationContext());
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String enrollmentJSON = sharedPreferences.getString(Constants.ENROLLMENT, null);
@@ -103,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
                 onPushNotificationReceived(notification);
             }
         }
+        askNotificationPermission();
     }
 
     @Override
@@ -130,15 +192,47 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
         deviceNameText = findViewById(R.id.deviceNameText);
         fcmTokenText = findViewById(R.id.fcmTokenText);
         userText = findViewById(R.id.userText);
-
+        totp = findViewById(R.id.totp);
 
         deviceNameText.setText(Build.ID);
 
-        Button enrollButton = findViewById(R.id.enrollButton);
-        enrollButton.setOnClickListener(v -> onEnrollRequested());
+        Button loginButton = findViewById(R.id.loginButton);
+        loginButton.setOnClickListener(v -> login());
+
+        Button enrollWithATButton = findViewById(R.id.enrollWithAT);
+        enrollWithATButton.setOnClickListener(v -> onEnrollRequested("login"));
+
+        Button enrollWithRT = findViewById(R.id.enrollWithRT);
+        enrollWithRT.setOnClickListener(v -> onEnrollRequested("withRT"));
+
+        Button forceloginButton = findViewById(R.id.forceLogin);
+        forceloginButton.setOnClickListener(v -> login());
 
         Button unenrollButton = findViewById(R.id.unenrollButton);
         unenrollButton.setOnClickListener(v -> onUnEnrollRequested());
+
+        Button loginROPGButton = findViewById(R.id.login);
+        loginROPGButton.setOnClickListener(v -> loginWithROPG());
+        Thread t = new Thread() {
+
+            @Override
+            public void run() {
+                try {
+                    while (!isInterrupted()) {
+                        Thread.sleep(1000);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateTOTPView();
+                            }
+                        });
+                    }
+                } catch (InterruptedException e) {
+                }
+            }
+        };
+
+        t.start();
     }
 
     public void onSilentCheckboxClicked(View view) {
@@ -171,10 +265,30 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
         });
     }
 
-    private void onEnrollRequested() {
+    private void updateTOTPView() {
+        if (enrollment != null) {
+            totp.setText(Guardian.getOTPCode(enrollment));
+        } else {
+            totp.setText("No TOTP to Display");
+        }
+    }
+
+    private void onEnrollRequested(String action) {
         Intent enrollIntent = EnrollActivity
-                .getStartIntent(this, deviceNameText.getText().toString(), fcmToken);
+                .getStartIntent(this, deviceNameText.getText().toString(), fcmToken, action);
         startActivityForResult(enrollIntent, ENROLL_REQUEST);
+    }
+
+    private void onEnrollWithRTRequested() {
+        Intent enrollIntent = EnrollActivity
+                .getStartIntent(this, deviceNameText.getText().toString(), fcmToken, "withRT");
+        startActivityForResult(enrollIntent, ENROLL_WITH_RT_REQUEST);
+    }
+
+    private void onConfirmEnrollmentRequested() {
+        Intent enrollIntent = EnrollActivity
+                .getStartIntent(this, deviceNameText.getText().toString(), fcmToken, "challenge");
+        startActivityForResult(enrollIntent, ENROLL_WITH_RT_REQUEST);
     }
 
     private void onUnEnrollRequested() {
@@ -212,17 +326,34 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
         updateUI();
     }
 
+    private void updateRefreshToken(String rt) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(Constants.REFRESH_TOKEN, rt != null ? rt : null);
+        editor.apply();
+
+        this.refreshToken = rt;
+    }
+
+    private void updateMFAAccessToken(String at) {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(Constants.MFA_ACCESS_TOKEN, at != null ? at : null);
+        editor.apply();
+    }
     private void onPushNotificationReceived(ParcelableNotification notification) {
         if (this.silentAccept) {
              guardian.allow(notification,enrollment).start(new SilentCallback<>());
         }
         else {
+            Log.d("onPush", "onPushNotificationReceived block");
             Intent intent = NotificationActivity
                     .getStartIntent(this, notification, enrollment);
 
             startActivity(intent);
         }
     }
+
 
     @Override
     public void onFcmTokenObtained(String fcmToken) {
@@ -259,4 +390,76 @@ public class MainActivity extends AppCompatActivity implements FcmUtils.FcmToken
 
         //TODO: Stop listening for push notification ...
     }
+
+    private void login() {
+        ParameterBuilder builder = ParameterBuilder.newBuilder();
+        Map<String, String> authenticationParameters = builder.set("prompt", "login").asDictionary();
+        WebAuthProvider.login(auth0)
+                .withScheme("demo")
+                .withTrustedWebActivity()
+                .withParameters(authenticationParameters)
+                .withAudience(getString(R.string.mfa_audience))
+                .withScope("openid profile enroll offline_access")
+                .start(MainActivity.this, new com.auth0.android.callback.Callback<Credentials, AuthenticationException>() {
+
+                    @Override
+                    public void onFailure(@NonNull final AuthenticationException exception) {
+                        Toast.makeText(MainActivity.this, "Error: " + exception.getCode(), Toast.LENGTH_SHORT).show();
+                        if (exception.isIdTokenValidationError()) {
+                            if (exception.getCause() instanceof TokenValidationException) {
+                                exception.printStackTrace();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onSuccess(@Nullable final Credentials credentials) {
+                        //credentialsManager.saveCredentials(credentials);
+                        updateRefreshToken(credentials.getRefreshToken());
+                        Log.d("AT", credentials.getAccessToken());
+                        Log.d("ID", credentials.getIdToken());
+                        Log.d("RT", credentials.getRefreshToken());
+                        Log.d("Scope", credentials.getScope());
+                        Log.d("Expires At", credentials.getExpiresAt().toString());
+                        userText.setText(credentials.getUser().getId());
+                        accountView.setVisibility(View.VISIBLE);
+                        enrollView.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    public void loginWithROPG() {
+        username = (EditText)findViewById(R.id.username);
+        password = (EditText)findViewById(R.id.password);
+        apiClient.login(username.getText().toString(), password.getText().toString(), "Username-Password-Authentication")
+                .validateClaims()
+                .setAudience(getString(R.string.mfa_audience).toString())
+                .setScope("openid profile email enroll")
+                .start(new com.auth0.android.callback.Callback<Credentials, AuthenticationException>() {
+                    @Override
+                    public void onSuccess(Credentials credentials) {
+                        updateMFAAccessToken(credentials.getAccessToken());
+                        onEnrollRequested("withROPG");
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull AuthenticationException e) {
+                        Toast.makeText(MainActivity.this, "Error: " + e.getCode(), Toast.LENGTH_LONG).show();
+                    }
+                });
+
+    }
+    private void askNotificationPermission() {
+        // This is only necessary for API Level > 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                    PackageManager.PERMISSION_GRANTED) {
+                // FCM SDK (and your app) can post notifications.
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
+    }
+
 }

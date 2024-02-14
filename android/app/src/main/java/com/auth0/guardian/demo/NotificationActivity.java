@@ -22,18 +22,30 @@
 
 package com.auth0.guardian.demo;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.auth0.android.guardian.sdk.Guardian;
 import com.auth0.android.guardian.sdk.ParcelableNotification;
 import com.auth0.android.guardian.sdk.networking.Callback;
+import com.auth0.guardian.demo.events.GuardianNotificationReceivedEvent;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class NotificationActivity extends AppCompatActivity {
 
@@ -45,7 +57,9 @@ public class NotificationActivity extends AppCompatActivity {
     private Guardian guardian;
     private ParcelableEnrollment enrollment;
     private ParcelableNotification notification;
+    private static final Gson JSON = new GsonBuilder().create();
 
+    private SharedPreferences sharedPreferences;
     static Intent getStartIntent(@NonNull Context context,
                                  @NonNull ParcelableNotification notification,
                                  @NonNull ParcelableEnrollment enrollment) {
@@ -65,16 +79,36 @@ public class NotificationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification);
+        // Clear the notification
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        manager.cancel(Constants.NOTIFICATION_ID);
 
         guardian = new Guardian.Builder()
                 .url(Uri.parse(getString(R.string.guardian_url)))
                 .enableLogging()
                 .build();
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String enrollmentJSON = sharedPreferences.getString(Constants.ENROLLMENT, null);
+        String notificationJSON = sharedPreferences.getString(Constants.NOTIFICATION, null);
         Intent intent = getIntent();
-        enrollment = intent.getParcelableExtra(Constants.ENROLLMENT);
-        notification = intent.getParcelableExtra(Constants.NOTIFICATION);
+        if (enrollmentJSON != null) {
+            enrollment = ParcelableEnrollment.fromJSON(enrollmentJSON);
+        } else {
+            enrollment = intent.getParcelableExtra(Constants.ENROLLMENT);
+        }
+        if (notificationJSON != null) {
+            Log.d("notification", notificationJSON);
+            java.lang.reflect.Type type = new TypeToken<HashMap<String, String>>(){}.getType();
+            HashMap<String, String> newMap = JSON.fromJson(notificationJSON, type);
 
+
+            notification = ParcelableNotification.parse(newMap);
+            Log.d("new map", newMap.toString());
+            Log.d("new notification", notification.getBrowserName());
+        } else {
+            notification = intent.getParcelableExtra(Constants.NOTIFICATION);
+        }
         setupUI();
         updateUI();
     }
@@ -94,7 +128,7 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        userText.setText(enrollment.getUserId());
+//        userText.setText(enrollment.getUserId());
         browserText.setText(
                 String.format("%s, %s",
                         notification.getBrowserName(),
@@ -116,11 +150,13 @@ public class NotificationActivity extends AppCompatActivity {
                         new Callback<Void>() {
                             @Override
                             public void onSuccess(Void response) {
+                                Log.d("reject", "push rejected");
                                 finish();
                             }
 
                             @Override
                             public void onFailure(Throwable exception) {
+                                exception.printStackTrace();
 
                             }
                         }));
@@ -135,12 +171,17 @@ public class NotificationActivity extends AppCompatActivity {
                         new Callback<Void>() {
                             @Override
                             public void onSuccess(Void response) {
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString(Constants.NOTIFICATION,  null);
+                                editor.apply();
                                 finish();
                             }
 
                             @Override
                             public void onFailure(Throwable exception) {
-
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString(Constants.NOTIFICATION,  null);
+                                editor.apply();
                             }
                         }));
     }
